@@ -31,6 +31,8 @@ def create_server(proxy: ProxyConfig):
 
         if proxy.listen.owner or proxy.listen.group:
             shutil.chown(proxy.listen.address, proxy.listen.owner, proxy.listen.group)
+        if proxy.listen.chmod is not None:
+            proxy.listen.path.chmod(proxy.listen.chmod)
         return server
     return socketserver.ThreadingTCPServer(proxy.listen.address, handler)
 

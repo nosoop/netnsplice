@@ -45,6 +45,7 @@ class ListenUnixSocketConfig(UnixSocketConfig):
     # only the listening socket can have these fields
     owner: typing.Optional[str]
     group: typing.Optional[str]
+    chmod: typing.Optional[int]
 
 
 class ForwardNetSocketConfig(NetSocketConfig):

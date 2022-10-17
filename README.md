@@ -16,5 +16,10 @@ listen.port = 50007
 forward.host = '127.0.16.5'
 forward.port = 8080
 
-# multiple [[proxies]] sections can be specified
+[[proxies]]
+# it can also listen on / forward to a Unix stream (TCP) socket
+listen.path = '/var/run/service.sock'
+
+forward.host = '127.0.0.1'
+forward.port = 8080
 ```

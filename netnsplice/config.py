@@ -1,10 +1,34 @@
 #!/usr/bin/python3
 
+import pathlib
 import pydantic
 import socket
+import typing
 
 
-class NetSocketConfig(pydantic.BaseModel):
+class BaseSocketConfig(pydantic.BaseModel):
+    @property
+    def address(self):
+        raise NotImplementedError
+
+    @property
+    def family(self) -> socket.AddressFamily:
+        raise NotImplementedError
+
+
+class UnixSocketConfig(BaseSocketConfig):
+    path: pathlib.Path
+
+    @property
+    def address(self):
+        return str(self.path)
+
+    @property
+    def family(self) -> socket.AddressFamily:
+        return socket.AF_UNIX
+
+
+class NetSocketConfig(BaseSocketConfig):
     host: str
     port: int
 
@@ -18,8 +42,8 @@ class NetSocketConfig(pydantic.BaseModel):
 
 
 class ProxyConfig(pydantic.BaseModel):
-    listen: NetSocketConfig
-    forward: NetSocketConfig
+    listen: typing.Union[NetSocketConfig, UnixSocketConfig]
+    forward: typing.Union[NetSocketConfig, UnixSocketConfig]
 
 
 class AppConfig(pydantic.BaseModel):

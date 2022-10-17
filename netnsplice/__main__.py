@@ -11,10 +11,16 @@ import tomli
 from .config import AppConfig, ProxyConfig
 from .proxy import ProxyStreamRequestHandlerFactory, SocketFactory
 
+unix_avail = hasattr(socket, "AF_UNIX")
+
 
 def create_server(proxy: ProxyConfig):
     socketfactory = SocketFactory(proxy.forward.family, proxy.forward.address)
     handler = ProxyStreamRequestHandlerFactory(socketfactory)
+
+    if unix_avail and proxy.listen.family == socket.AF_UNIX:
+        proxy.listen.path.unlink(missing_ok=True)
+        return socketserver.ThreadingUnixStreamServer(proxy.listen.address, handler)
     return socketserver.ThreadingTCPServer(proxy.listen.address, handler)
 
 

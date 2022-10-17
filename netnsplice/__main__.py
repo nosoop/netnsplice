@@ -8,8 +8,14 @@ import threading
 import time
 import tomli
 
-from .config import AppConfig
+from .config import AppConfig, ProxyConfig
 from .proxy import ProxyStreamRequestHandlerFactory, SocketFactory
+
+
+def create_server(proxy: ProxyConfig):
+    socketfactory = SocketFactory(proxy.forward.family, proxy.forward.address)
+    handler = ProxyStreamRequestHandlerFactory(socketfactory)
+    return socketserver.ThreadingTCPServer(proxy.listen.address, handler)
 
 
 def main():
@@ -21,10 +27,9 @@ def main():
     config = AppConfig.parse_obj(tomli.loads(args.config.read_text()))
 
     servers = []
+
     for proxy in config.proxies:
-        socketfactory = SocketFactory(proxy.forward.family, proxy.forward.address)
-        handler = ProxyStreamRequestHandlerFactory(socketfactory)
-        server = socketserver.ThreadingTCPServer(proxy.listen.address, handler)
+        server = create_server(proxy)
 
         thread = threading.Thread(target=server.serve_forever)
         thread.start()

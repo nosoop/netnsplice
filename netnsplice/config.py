@@ -41,9 +41,14 @@ class NetSocketConfig(BaseSocketConfig):
         return socket.AF_INET
 
 
+class ForwardNetSocketConfig(NetSocketConfig):
+    # only the socket we are forwarding to can support namespaces at the moment
+    nspath: typing.Optional[str]
+
+
 class ProxyConfig(pydantic.BaseModel):
     listen: typing.Union[NetSocketConfig, UnixSocketConfig]
-    forward: typing.Union[NetSocketConfig, UnixSocketConfig]
+    forward: typing.Union[ForwardNetSocketConfig, UnixSocketConfig]
 
 
 class AppConfig(pydantic.BaseModel):

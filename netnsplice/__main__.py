@@ -10,12 +10,18 @@ import tomli
 
 from .config import AppConfig, ProxyConfig
 from .proxy import ProxyStreamRequestHandlerFactory, SocketFactory
+from .netns import NamespacedSocketFactory
 
 unix_avail = hasattr(socket, "AF_UNIX")
 
 
 def create_server(proxy: ProxyConfig):
     socketfactory = SocketFactory(proxy.forward.family, proxy.forward.address)
+    if proxy.forward.family == socket.AF_INET and proxy.forward.nspath:
+        socketfactory = NamespacedSocketFactory(
+            proxy.forward.family, proxy.forward.address, proxy.forward.nspath
+        )
+
     handler = ProxyStreamRequestHandlerFactory(socketfactory)
 
     if unix_avail and proxy.listen.family == socket.AF_UNIX:

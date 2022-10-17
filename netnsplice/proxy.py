@@ -18,16 +18,25 @@ def _socket_forward(src_sock: socket.socket, dst_sock: socket.socket, buffer_siz
             break
 
 
+def SocketFactory(family: socket.AddressFamily, address):
+    # returns a callable that instantiates and connects a socket when called
+    def init_socket():
+        sock = socket.socket(family)
+        sock.connect(address)
+        return sock
+
+    return init_socket
+
+
 def ProxyStreamRequestHandlerFactory(
-    family: socket.AddressFamily, address, buffer_size: int = DEFAULT_BUFFER_SIZE
+    socket_factory: callable, buffer_size: int = DEFAULT_BUFFER_SIZE
 ):
     # instantiates a stream / TCP proxy handler with the address set up
     # socketserver.BaseServer instances take a class and doesn't pass any args to __init__,
     # so we need to use a factory for this
     class ProxyStreamRequestHandler(socketserver.BaseRequestHandler):
         def setup(self):
-            self.forward = socket.socket(family)
-            self.forward.connect(address)
+            self.forward = socket_factory()
 
         def handle(self):
             # create bidirectional connections between (request, forward)

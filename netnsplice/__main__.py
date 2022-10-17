@@ -2,13 +2,14 @@
 
 import argparse
 import pathlib
+import socket
 import socketserver
 import threading
 import time
 import tomli
 
 from .config import AppConfig
-from .proxy import ProxyStreamRequestHandlerFactory
+from .proxy import ProxyStreamRequestHandlerFactory, SocketFactory
 
 
 def main():
@@ -21,7 +22,8 @@ def main():
 
     servers = []
     for proxy in config.proxies:
-        handler = ProxyStreamRequestHandlerFactory(proxy.forward.family, proxy.forward.address)
+        socketfactory = SocketFactory(proxy.forward.family, proxy.forward.address)
+        handler = ProxyStreamRequestHandlerFactory(socketfactory)
         server = socketserver.ThreadingTCPServer(proxy.listen.address, handler)
 
         thread = threading.Thread(target=server.serve_forever)

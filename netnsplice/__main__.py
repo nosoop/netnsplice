@@ -2,6 +2,7 @@
 
 import argparse
 import pathlib
+import shutil
 import socket
 import socketserver
 import threading
@@ -26,7 +27,11 @@ def create_server(proxy: ProxyConfig):
 
     if unix_avail and proxy.listen.family == socket.AF_UNIX:
         proxy.listen.path.unlink(missing_ok=True)
-        return socketserver.ThreadingUnixStreamServer(proxy.listen.address, handler)
+        server = socketserver.ThreadingUnixStreamServer(proxy.listen.address, handler)
+
+        if proxy.listen.owner or proxy.listen.group:
+            shutil.chown(proxy.listen.address, proxy.listen.owner, proxy.listen.group)
+        return server
     return socketserver.ThreadingTCPServer(proxy.listen.address, handler)
 
 

@@ -41,13 +41,19 @@ class NetSocketConfig(BaseSocketConfig):
         return socket.AF_INET
 
 
+class ListenUnixSocketConfig(UnixSocketConfig):
+    # only the listening socket can have these fields
+    owner: typing.Optional[str]
+    group: typing.Optional[str]
+
+
 class ForwardNetSocketConfig(NetSocketConfig):
     # only the socket we are forwarding to can support namespaces at the moment
     nspath: typing.Optional[str]
 
 
 class ProxyConfig(pydantic.BaseModel):
-    listen: typing.Union[NetSocketConfig, UnixSocketConfig]
+    listen: typing.Union[NetSocketConfig, ListenUnixSocketConfig]
     forward: typing.Union[ForwardNetSocketConfig, UnixSocketConfig]
 
 

@@ -1,40 +1,44 @@
 #!/usr/bin/python3
 
 import argparse
-import socket
+import pathlib
 import socketserver
 import threading
+import time
+import tomli
 
+from .config import AppConfig
 from .proxy import ProxyStreamRequestHandlerFactory
 
 
 def main():
-    # this is a temporary setup to avoid having hardcoded args in commit history
     parser = argparse.ArgumentParser(description="Proxies data between addresses")
-    parser.add_argument("listen_host")
-    parser.add_argument("listen_port", type=int)
-
-    parser.add_argument("forward_host")
-    parser.add_argument("forward_port", type=int)
+    parser.add_argument("config", type=pathlib.Path)
 
     args = parser.parse_args()
 
-    listen_addr = (args.listen_host, args.listen_port)
-    forward_addr = (args.forward_host, args.forward_port)
+    config = AppConfig.parse_obj(tomli.loads(args.config.read_text()))
 
-    handler = ProxyStreamRequestHandlerFactory(socket.AF_INET, forward_addr)
-    with socketserver.ThreadingTCPServer(listen_addr, handler) as server:
-        server_thread = threading.Thread(target=server.serve_forever)
-        server_thread.start()
+    servers = []
+    for proxy in config.proxies:
+        handler = ProxyStreamRequestHandlerFactory(proxy.forward.family, proxy.forward.address)
+        server = socketserver.ThreadingTCPServer(proxy.listen.address, handler)
 
-        # allow clean interrupts
-        try:
-            while server_thread.is_alive():
-                server_thread.join(0.5)
-        except (KeyboardInterrupt, SystemExit):
-            pass
-        finally:
-            server.shutdown()
+        thread = threading.Thread(target=server.serve_forever)
+        thread.start()
+
+        servers.append(server)
+
+    # allow clean interrupts
+    try:
+        while True:
+            time.sleep(0.5)
+    except (KeyboardInterrupt, SystemExit):
+        pass
+
+    # shutdown listeners
+    for server in servers:
+        server.shutdown()
 
 
 if __name__ == "__main__":

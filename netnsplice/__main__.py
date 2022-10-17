@@ -26,15 +26,11 @@ def main():
 
     config = AppConfig.parse_obj(tomli.loads(args.config.read_text()))
 
-    servers = []
+    servers = [create_server(proxy) for proxy in config.proxies]
 
-    for proxy in config.proxies:
-        server = create_server(proxy)
-
+    for server in servers:
         thread = threading.Thread(target=server.serve_forever)
         thread.start()
-
-        servers.append(server)
 
     # allow clean interrupts
     try:

@@ -1,21 +1,10 @@
 #!/usr/bin/python3
 
-import concurrent.futures
+import select
 import socket
 import socketserver
 
 DEFAULT_BUFFER_SIZE = 4096
-
-
-def _socket_forward(src_sock: socket.socket, dst_sock: socket.socket, buffer_size: int):
-    # passes the data from src_sock to dst_sock
-    # the caller is responsible for cleaning up the sockets after this function returns
-    while True:
-        buffer = src_sock.recv(buffer_size)
-        if buffer:
-            dst_sock.sendall(buffer)
-        else:
-            break
 
 
 def SocketFactory(family: socket.AddressFamily, address):
@@ -39,14 +28,22 @@ def ProxyStreamRequestHandlerFactory(
             self.forward = socket_factory()
 
         def handle(self):
-            # create bidirectional connections between (request, forward)
-            # surely there's a way to do this in one function...
+            # create bidirectional associations between (request, forward)
+            dest_map = {
+                self.request: self.forward,
+                self.forward: self.request,
+            }
 
-            # the executor will block until both connections have finished
+            # the function will block as long as the sockets are connected
             # socketserver.TCPServer shuts down the request socket once this method returns
-            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-                executor.submit(_socket_forward, self.request, self.forward, buffer_size)
-                executor.submit(_socket_forward, self.forward, self.request, buffer_size)
+            while True:
+                readable, writable, exceptioned = select.select(dest_map.keys(), [], [])
+                for sock in readable:
+                    buffer = sock.recv(buffer_size)
+                    if buffer:
+                        dest_map[sock].sendall(buffer)
+                    else:
+                        return
 
         def finish(self):
             self.forward.shutdown(socket.SHUT_RDWR)

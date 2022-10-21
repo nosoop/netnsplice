@@ -36,14 +36,19 @@ def ProxyStreamRequestHandlerFactory(
 
             # the function will block as long as the sockets are connected
             # socketserver.TCPServer shuts down the request socket once this method returns
-            while True:
-                readable, writable, exceptioned = select.select(dest_map.keys(), [], [])
-                for sock in readable:
-                    buffer = sock.recv(buffer_size)
-                    if buffer:
-                        dest_map[sock].sendall(buffer)
-                    else:
-                        return
+            while self.process_connection(dest_map):
+                pass
+
+        def process_connection(self, dest_map):
+            # returns false if the connection was terminated
+            readable, writable, exceptioned = select.select(dest_map.keys(), [], [])
+            for sock in readable:
+                buffer = sock.recv(buffer_size)
+                if buffer:
+                    dest_map[sock].sendall(buffer)
+                else:
+                    return False
+            return True
 
         def finish(self):
             self.forward.shutdown(socket.SHUT_RDWR)

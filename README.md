@@ -1,12 +1,13 @@
 # netnsplice
 
-A tool to replay / proxy data across sockets.  Like a daemonized `socat` of sorts.
+A cross-platform tool to relay / proxy data across TCP sockets.
+Like a daemonized `socat` of sorts.
 
 ## Configuration
 
-Create a TOML file with the following:
+Create a TOML file.  Example below demonstrating the tool's features:
 
-```
+```toml
 [[proxies]]
 # service will listen on this socket for incoming connections
 listen.host = '127.0.16.5'
@@ -31,4 +32,4 @@ forward.port = 8080
 forward.nspath = '/var/run/netns/isolated'
 ```
 
-Run `netnsplice config.toml`.
+Run `netnsplice config.toml`, substituting `config.toml` with the path of your file.

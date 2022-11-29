@@ -16,6 +16,24 @@ from .netns import NamespacedSocketFactory
 unix_avail = hasattr(socket, "AF_UNIX")
 
 
+class AutoRequestQueueMixIn:
+    # disable the default maximum of 5 (!!) connections for socketserver to use more sane defaults
+    def server_activate(self):
+        self.socket.listen()
+
+
+class InternalThreadingTCPServer(AutoRequestQueueMixIn, socketserver.ThreadingTCPServer):
+    pass
+
+
+if hasattr(socket, "AF_UNIX"):
+
+    class InternalThreadingUnixStreamServer(
+        AutoRequestQueueMixIn, socketserver.ThreadingUnixStreamServer
+    ):
+        pass
+
+
 def create_server(proxy: ProxyConfig):
     socketfactory = SocketFactory(proxy.forward.family, proxy.forward.address)
     if proxy.forward.family == socket.AF_INET and proxy.forward.nspath:
@@ -27,14 +45,14 @@ def create_server(proxy: ProxyConfig):
 
     if unix_avail and proxy.listen.family == socket.AF_UNIX:
         proxy.listen.path.unlink(missing_ok=True)
-        server = socketserver.ThreadingUnixStreamServer(proxy.listen.address, handler)
+        server = InternalThreadingUnixStreamServer(proxy.listen.address, handler)
 
         if proxy.listen.owner or proxy.listen.group:
             shutil.chown(proxy.listen.address, proxy.listen.owner, proxy.listen.group)
         if proxy.listen.chmod is not None:
             proxy.listen.path.chmod(proxy.listen.chmod)
         return server
-    return socketserver.ThreadingTCPServer(proxy.listen.address, handler)
+    return InternalThreadingTCPServer(proxy.listen.address, handler)
 
 
 def main():

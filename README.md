@@ -33,3 +33,11 @@ forward.nspath = '/var/run/netns/isolated'
 ```
 
 Run `netnsplice config.toml`, substituting `config.toml` with the path of your file.
+
+## License
+
+Provided under [MIT No Attribution](https://spdx.org/licenses/MIT-0.html).  Use the code as
+you'd like.
+
+However, do note that the `python-netns` package that is optionally used is licensed under
+GPLv3.

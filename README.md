@@ -3,6 +3,18 @@
 A cross-platform tool to relay / proxy data across TCP sockets.
 Like a daemonized `socat` of sorts.
 
+## Installation
+
+Package is currently only provided in the git repository:
+
+```
+# cutting edge
+pip install "git+https://github.com/nosoop/netnsplice#egg=netnsplice"
+
+# with network namespace support
+pip install "git+https://github.com/nosoop/netnsplice#egg=netnsplice[netns]"
+```
+
 ## Configuration
 
 Create a TOML file.  Example below demonstrating the tool's features:

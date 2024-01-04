@@ -31,16 +31,19 @@ forward.port = 8080
 
 [[proxies]]
 # it can also listen on / forward to a Unix stream (TCP) socket
-# the listening socket can have its ownership and access permissions set
 listen.path = '/var/run/service.sock'
+
+# the listening socket can have its ownership and access permissions set
+# if not running as root, the user will need CAP_CHOWN and CAP_FOWNER capabilites respectively
 listen.group = 'www-data'
 listen.chmod = 0o600
 
-# the forwarded socket may also be inside a network namespace (if on Linux)
-# if you'd like to, you will need to run the application as a user that is capable of setns
-# you will also need to install as 'netnsplice[netns]' (with the 'netns' extra)
 forward.host = '127.0.0.1'
 forward.port = 8080
+
+# the forwarded socket may also be inside a network namespace (if on Linux)
+# if not running as root, the user will need CAP_SYS_ADMIN capabilities to use setns
+# you will also need to install as 'netnsplice[netns]' (with the 'netns' extra)
 forward.nspath = '/var/run/netns/isolated'
 ```
 

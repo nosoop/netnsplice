@@ -1,7 +1,11 @@
 # netnsplice
 
+> [!NOTE]
+> This project has been archived.  While it still probably all works just fine, I've opted to
+> migrate my Linux services to use `systemd-socket-proxyd`.
+
 A cross-platform tool to relay / proxy data across TCP sockets.
-Like a daemonized `socat` of sorts.
+Like `rinetd` or a daemonized `socat` of sorts.
 
 ## Installation
 
